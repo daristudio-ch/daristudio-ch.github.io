@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dari Studio</title>
+<meta name="description" content="Dari Studio makes cosy, relaxing puzzle games. Our first game is Goods Sort Puzzle.">
+<meta name="theme-color" content="#1B0F30">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&display=swap" rel="stylesheet">
+<style>
+  /* Contact address: fill in once you have a public studio email. */
+  :root {
+    --night: #1B0F30;
+    --twilight: #2A1945;
+    --dusk: #432868;
+    --oak: #7A4A2A;
+    --oak-dark: #4A2A14;
+    --oak-light: #A8703F;
+    --honey: #F5B83D;
+    --cream: #FFF6E5;
+    --lilac: #CDB9E8;
+    --line: rgba(205, 185, 232, 0.18);
+    --display: 'Baloo 2', 'Trebuchet MS', system-ui, sans-serif;
+    --text: 'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; background: var(--dusk); }
+  body {
+    margin: 0;
+    font-family: var(--text);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--cream);
+    background:
+      radial-gradient(1200px 700px at 78% 8%, rgba(138, 92, 200, 0.28), transparent 60%),
+      linear-gradient(180deg, var(--night) 0%, var(--twilight) 45%, var(--dusk) 100%);
+    background-repeat: no-repeat;
+    min-height: 100vh;
+  }
+  a { color: var(--honey); text-underline-offset: 3px; }
+  a:hover { color: #FFD27A; }
+  :focus-visible { outline: 3px solid var(--honey); outline-offset: 3px; border-radius: 6px; }
+  .wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
+
+  /* Header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
+  .brand { display: flex; align-items: center; gap: 12px; color: var(--cream); text-decoration: none; }
+  .brand img { width: 44px; height: 44px; border-radius: 12px; }
+  .brand span { font-family: var(--display); font-weight: 800; font-size: 1.45rem; letter-spacing: 0.2px; }
+  .langs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); }
+  .langs button {
+    font: 800 0.82rem var(--text); color: var(--lilac); background: transparent; border: 0;
+    padding: 6px 10px; border-radius: 999px; cursor: pointer;
+  }
+  .langs button[aria-pressed="true"] { background: var(--honey); color: var(--twilight); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; padding-block: 48px 88px; }
+  .hero h1 {
+    font-family: var(--display); font-weight: 800; line-height: 1.02;
+    font-size: clamp(2.6rem, 6vw, 4.6rem); margin: 0 0 20px; letter-spacing: -0.5px;
+    text-wrap: balance;
+  }
+  .hero p { color: var(--lilac); font-size: 1.15rem; max-width: 34ch; margin: 0 0 28px; }
+  .cta { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; text-decoration: none;
+    background: var(--honey); color: var(--twilight); padding: 13px 22px; border-radius: 14px;
+    box-shadow: 0 4px 0 #B07B1E; transition: transform .12s ease, box-shadow .12s ease; }
+  .cta:hover { color: var(--twilight); transform: translateY(-1px); }
+  .cta:active { transform: translateY(3px); box-shadow: 0 1px 0 #B07B1E; }
+
+  /* Playable shelf */
+  .play { justify-self: center; width: min(440px, 100%); }
+  .shelf {
+    background: var(--oak-dark); padding: 10px; border-radius: 22px;
+    box-shadow: 0 18px 40px rgba(8, 3, 20, 0.55);
+  }
+  .shelf-inner { background: var(--oak); border-radius: 15px; padding: 12px 12px 4px; }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding-bottom: 14px; position: relative; }
+  .row::after { content: ''; position: absolute; left: -12px; right: -12px; bottom: 0; height: 9px;
+    background: var(--oak-light); border-top: 2px solid rgba(255, 255, 255, 0.22); }
+  .row:last-child::after { border-radius: 0 0 12px 12px; }
+  .row + .row { margin-top: 10px; }
+  .tile {
+    aspect-ratio: 1; border: 0; border-radius: 22%; cursor: pointer; font-size: clamp(1.6rem, 5vw, 2.3rem);
+    display: grid; place-items: center; position: relative;
+    box-shadow: inset 0 -6px 0 rgba(60, 30, 80, 0.22), 0 3px 0 rgba(30, 12, 40, 0.35);
+    transition: transform .12s ease;
+  }
+  .tile:hover { transform: translateY(-3px); }
+  .tile.gone { visibility: hidden; pointer-events: none; }
+  .tray {
+    margin-top: 18px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    background: var(--oak-dark); border: 2px solid var(--oak-light); border-radius: 16px; padding: 8px;
+  }
+  .tray.danger { border-color: #FF6B6B; }
+  .slot { aspect-ratio: 1; border-radius: 22%; background: rgba(255, 255, 255, 0.12); display: grid; place-items: center; font-size: clamp(1rem, 3.4vw, 1.5rem); }
+  .slot .tile { width: 100%; font-size: inherit; cursor: default; box-shadow: inset 0 -4px 0 rgba(60, 30, 80, 0.22); }
+  .slot .tile:hover { transform: none; }
+  .slot .tile.pop { animation: pop .32s ease forwards; }
+  @keyframes pop { 50% { transform: scale(1.18); } 100% { transform: scale(0); opacity: 0; } }
+  .play-status { min-height: 1.6em; margin-top: 12px; color: var(--lilac); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .reset { white-space: nowrap; flex-shrink: 0; font: 800 0.9rem var(--text); color: var(--cream); background: transparent; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+  .reset:hover { border-color: var(--lilac); }
+  .flyer { position: fixed; z-index: 20; pointer-events: none; transition: transform .32s cubic-bezier(.3,.8,.3,1); }
+
+  /* Game */
+  .game { display: grid; grid-template-columns: 320px 1fr; gap: 64px; align-items: center; padding-block: 72px; border-top: 1px solid var(--line); }
+  .phone { width: 100%; border-radius: 28px; padding: 10px; background: #0E0818; box-shadow: 0 24px 60px rgba(8, 3, 20, 0.6), inset 0 0 0 2px rgba(255,255,255,0.06); }
+  .phone img { display: block; width: 100%; height: auto; border-radius: 24px; }
+  .game-head { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+  .game-head img { width: 84px; height: 84px; border-radius: 20px; box-shadow: 0 8px 20px rgba(8,3,20,.45); }
+  .game h2 { font-family: var(--display); font-weight: 800; font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.05; margin: 0; }
+  .soon { display: inline-block; margin-top: 6px; color: var(--honey); font-weight: 800; }
+  .game p { max-width: 58ch; margin: 0 0 18px; }
+  .features { list-style: none; padding: 0; margin: 24px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; max-width: 640px; }
+  .features li { padding-left: 30px; position: relative; color: var(--cream); }
+  .features li::before { content: ''; position: absolute; left: 0; top: 0.45em; width: 16px; height: 16px; border-radius: 5px; background: var(--honey); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.18); }
+  .features li strong { display: block; font-weight: 800; }
+  .features li span { color: var(--lilac); font-size: 0.97rem; }
+
+  /* Studio + contact */
+  .studio { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; padding-block: 72px; border-top: 1px solid var(--line); }
+  .studio h2 { font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1.1; margin: 0 0 14px; }
+  .studio p { margin: 0 0 12px; max-width: 52ch; color: var(--lilac); }
+  .studio .email { font-weight: 800; color: var(--cream); font-size: 1.15rem; word-break: break-all; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 28px 40px; color: var(--lilac); font-size: 0.92rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  footer a { color: var(--lilac); }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding-block: 24px 64px; }
+    .game { grid-template-columns: 1fr; gap: 36px; }
+    .phone { max-width: 300px; margin-inline: auto; }
+    .studio { grid-template-columns: 1fr; gap: 36px; }
+  }
+  @media (max-width: 520px) {
+    .features { grid-template-columns: 1fr; }
+    .brand span { font-size: 1.2rem; }
+    .langs button { padding: 6px 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="#">
+      <img src="assets/dari-studio-logo.png" alt="" width="44" height="44">
+      <span>Dari Studio</span>
+    </a>
+    <div class="langs" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="fr">FR</button>
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="bg">BG</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="wrap hero">
+      <div>
+        <h1 data-i18n="heroTitle">Small puzzles for quiet minutes.</h1>
+        <p data-i18n="heroText">Dari Studio makes cosy games you can pick up for a few minutes and put down with a smile.</p>
+        <a class="cta" href="#goods-sort" data-i18n="heroCta">Meet Goods Sort Puzzle</a>
+      </div>
+
+      <div class="play" aria-label="Mini game">
+        <div class="shelf"><div class="shelf-inner" id="shelf"></div></div>
+        <div class="tray" id="tray" aria-label="Tray"></div>
+        <div class="play-status">
+          <span id="status" aria-live="polite" data-i18n="playHint">Tap three of a kind to clear them.</span>
+          <button class="reset" type="button" id="reset" data-i18n="playAgain">Play again</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap game" id="goods-sort">
+      <div class="phone"><img src="assets/goods-sort-screen.jpg" width="540" height="740" alt="Goods Sort Puzzle: wooden shelves full of magic items and a tray at the bottom" data-i18n-alt="screenAlt"></div>
+      <div>
+        <div class="game-head">
+          <img src="assets/goods-sort-icon.png" width="84" height="84" alt="">
+          <div>
+            <h2>Goods Sort Puzzle</h2>
+            <span class="soon" data-i18n="soon">Coming soon to Google Play</span>
+          </div>
+        </div>
+        <p data-i18n="gameText1">Tap items on the wooden shelves to move them to your tray. Collect three of a kind to clear them, and empty every shelf to finish the level.</p>
+        <p data-i18n="gameText2">The tray only holds seven items, so a little planning goes a long way.</p>
+        <ul class="features">
+          <li><strong data-i18n="f1t">Endless levels</strong><span data-i18n="f1d">Every level is checked to be solvable.</span></li>
+          <li><strong data-i18n="f2t">Five colour palettes</strong><span data-i18n="f2d">From Mystic Twilight to Obsidian Gold.</span></li>
+          <li><strong data-i18n="f3t">Weekly seasons</strong><span data-i18n="f3d">Earn shelf skins, tray borders and avatar frames.</span></li>
+          <li><strong data-i18n="f4t">No account needed</strong><span data-i18n="f4d">Open the game and play, even offline.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap studio" id="contact">
+      <div>
+        <h2 data-i18n="aboutTitle">About the studio</h2>
+        <p data-i18n="aboutText1">Dari Studio is a small independent studio. We design games that are calm, colourful and fair: no pressure, no tricks, just a satisfying puzzle.</p>
+        <p data-i18n="aboutText2">Our games are available in English, French, German and Bulgarian.</p>
+      </div>
+      <div>
+        <h2 data-i18n="contactTitle">Get in touch</h2>
+        <p data-i18n="contactText">Questions, ideas or a bug to report? Write to us:</p>
+        <p class="email" id="email"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <span>© 2026 Dari Studio</span>
+    <a href="privacy-policy.html" data-i18n="privacy">Privacy policy for Goods Sort Puzzle</a>
+  </footer>
+
+<script>
+  /* ---------- Settings ---------- */
+  const CONTACT_EMAIL = 'CONTACT_EMAIL';
+
+  /* ---------- Translations ---------- */
+  const T = {
+    en: {
+      heroTitle: 'Small puzzles for quiet minutes.',
+      heroText: 'Dari Studio makes cosy games you can pick up for a few minutes and put down with a smile.',
+      heroCta: 'Meet Goods Sort Puzzle',
+      playHint: 'Tap three of a kind to clear them.',
+      playWin: 'Shelf cleared. Nicely done!',
+      playLose: 'The tray is full. Try again?',
+      playAgain: 'Play again',
+      soon: 'Coming soon to Google Play',
+      screenAlt: 'Goods Sort Puzzle: wooden shelves full of magic items and a tray at the bottom',
+      gameText1: 'Tap items on the wooden shelves to move them to your tray. Collect three of a kind to clear them, and empty every shelf to finish the level.',
+      gameText2: 'The tray only holds seven items, so a little planning goes a long way.',
+      f1t: 'Endless levels', f1d: 'Every level is checked to be solvable.',
+      f2t: 'Five colour palettes', f2d: 'From Mystic Twilight to Obsidian Gold.',
+      f3t: 'Weekly seasons', f3d: 'Earn shelf skins, tray borders and avatar frames.',
+      f4t: 'No account needed', f4d: 'Open the game and play, even offline.',
+      aboutTitle: 'About the studio',
+      aboutText1: 'Dari Studio is a small independent studio. We design games that are calm, colourful and fair: no pressure, no tricks, just a satisfying puzzle.',
+      aboutText2: 'Our games are available in English, French, German and Bulgarian.',
+      contactTitle: 'Get in touch',
+      contactText: 'Questions, ideas or a bug to report? Write to us:',
+      privacy: 'Privacy policy for Goods Sort Puzzle',
+    },
+    fr: {
+      heroTitle: 'De petits casse-têtes pour les moments calmes.',
+      heroText: 'Dari Studio crée des jeux apaisants à lancer quelques minutes et à quitter avec le sourire.',
+      heroCta: 'Découvrir Goods Sort Puzzle',
+      playHint: 'Touche trois objets identiques pour les faire disparaître.',
+      playWin: 'Étagère vidée. Bien joué !',
+      playLose: 'Le plateau est plein. On réessaie ?',
+      playAgain: 'Rejouer',
+      soon: 'Bientôt sur Google Play',
+      screenAlt: 'Goods Sort Puzzle : des étagères en bois remplies d’objets magiques et un plateau en bas',
+      gameText1: 'Touche les objets sur les étagères en bois pour les placer sur ton plateau. Réunis trois objets identiques pour les faire disparaître et vide toutes les étagères pour terminer le niveau.',
+      gameText2: 'Le plateau ne contient que sept objets : un peu de réflexion fait toute la différence.',
+      f1t: 'Des niveaux à l’infini', f1d: 'Chaque niveau est vérifié pour être soluble.',
+      f2t: 'Cinq palettes de couleurs', f2d: 'Du Crépuscule mystique à Obsidienne et or.',
+      f3t: 'Saisons hebdomadaires', f3d: 'Gagne des habillages d’étagère, des bordures et des cadres.',
+      f4t: 'Aucun compte requis', f4d: 'Ouvre le jeu et joue, même hors ligne.',
+      aboutTitle: 'Le studio',
+      aboutText1: 'Dari Studio est un petit studio indépendant. Nous créons des jeux calmes, colorés et honnêtes : sans pression, sans pièges, juste le plaisir de résoudre.',
+      aboutText2: 'Nos jeux sont disponibles en français, anglais, allemand et bulgare.',
+      contactTitle: 'Nous contacter',
+      contactText: 'Une question, une idée ou un bug à signaler ? Écris-nous :',
+      privacy: 'Politique de confidentialité de Goods Sort Puzzle',
+    },
+    de: {
+      heroTitle: 'Kleine Rätsel für ruhige Minuten.',
+      heroText: 'Dari Studio macht gemütliche Spiele, die du für ein paar Minuten startest und mit einem Lächeln beendest.',
+      heroCta: 'Goods Sort Puzzle entdecken',
+      playHint: 'Tippe drei gleiche an, um sie zu entfernen.',
+      playWin: 'Regal geleert. Gut gemacht!',
+      playLose: 'Die Leiste ist voll. Noch einmal?',
+      playAgain: 'Nochmal spielen',
+      soon: 'Bald auf Google Play',
+      screenAlt: 'Goods Sort Puzzle: Holzregale voller magischer Gegenstände und unten eine Leiste',
+      gameText1: 'Tippe auf Gegenstände in den Holzregalen, um sie in deine Leiste zu legen. Sammle drei gleiche, um sie zu entfernen, und leere alle Regale, um das Level zu schaffen.',
+      gameText2: 'In die Leiste passen nur sieben Gegenstände, also lohnt sich ein wenig Planung.',
+      f1t: 'Endlos viele Level', f1d: 'Jedes Level ist garantiert lösbar.',
+      f2t: 'Fünf Farbpaletten', f2d: 'Von Mystische Dämmerung bis Obsidian & Gold.',
+      f3t: 'Wöchentliche Saisons', f3d: 'Verdiene Regal-Designs, Leistenränder und Avatar-Rahmen.',
+      f4t: 'Kein Konto nötig', f4d: 'Spiel öffnen und loslegen, auch offline.',
+      aboutTitle: 'Über das Studio',
+      aboutText1: 'Dari Studio ist ein kleines unabhängiges Studio. Wir machen Spiele, die ruhig, farbenfroh und fair sind: kein Druck, keine Tricks, einfach ein schönes Rätsel.',
+      aboutText2: 'Unsere Spiele gibt es auf Deutsch, Englisch, Französisch und Bulgarisch.',
+      contactTitle: 'Kontakt',
+      contactText: 'Fragen, Ideen oder einen Fehler gefunden? Schreib uns:',
+      privacy: 'Datenschutzerklärung für Goods Sort Puzzle',
+    },
+    bg: {
+      heroTitle: 'Малки пъзели за спокойни минути.',
+      heroText: 'Dari Studio прави уютни игри, които пускаш за няколко минути и оставяш с усмивка.',
+      heroCta: 'Запознай се с Goods Sort Puzzle',
+      playHint: 'Докосни три еднакви, за да изчезнат.',
+      playWin: 'Рафтът е празен. Браво!',
+      playLose: 'Тавата е пълна. Пак ли?',
+      playAgain: 'Играй пак',
+      soon: 'Скоро в Google Play',
+      screenAlt: 'Goods Sort Puzzle: дървени рафтове с магически предмети и тава отдолу',
+      gameText1: 'Докосвай предметите по дървените рафтове, за да ги прехвърлиш в тавата. Събери три еднакви, за да изчезнат, и изпразни всички рафтове, за да завършиш нивото.',
+      gameText2: 'В тавата има място само за седем предмета, затова малко мислене помага много.',
+      f1t: 'Безкрайни нива', f1d: 'Всяко ниво е проверено, че има решение.',
+      f2t: 'Пет цветови палитри', f2d: 'От Мистичен здрач до Обсидиан и злато.',
+      f3t: 'Седмични сезони', f3d: 'Печели облици на рафтове, рамки на тавата и на аватара.',
+      f4t: 'Без регистрация', f4d: 'Отвори играта и играй, дори без интернет.',
+      aboutTitle: 'За студиото',
+      aboutText1: 'Dari Studio е малко независимо студио. Правим игри, които са спокойни, цветни и честни: без напрежение, без номера, само приятен пъзел.',
+      aboutText2: 'Игрите ни са на български, английски, френски и немски.',
+      contactTitle: 'Свържи се с нас',
+      contactText: 'Въпрос, идея или грешка? Пиши ни:',
+      privacy: 'Политика за поверителност на Goods Sort Puzzle',
+    },
+  };
+
+  let lang = 'en';
+  function pickLang() {
+    try {
+      const saved = localStorage.getItem('dari-lang');
+      if (saved && T[saved]) return saved;
+    } catch (e) { /* storage unavailable */ }
+    const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return T[nav] ? nav : 'en';
+  }
+  function t(key) { return (T[lang] && T[lang][key]) || T.en[key] || ''; }
+  function applyLang(next) {
+    lang = next;
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-alt]').forEach((el) => { el.alt = t(el.dataset.i18nAlt); });
+    document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    refreshStatus();
+    try { localStorage.setItem('dari-lang', lang); } catch (e) { /* ignore */ }
+  }
+  document.querySelectorAll('.langs button').forEach((b) => b.addEventListener('click', () => applyLang(b.dataset.lang)));
+
+  const emailEl = document.getElementById('email');
+  emailEl.textContent = CONTACT_EMAIL;
+  if (CONTACT_EMAIL.includes('@')) {
+    const a = document.createElement('a');
+    a.href = 'mailto:' + CONTACT_EMAIL; a.textContent = CONTACT_EMAIL; a.className = 'email';
+    emailEl.replaceChildren(a);
+  }
+
+  /* ---------- Mini triple-match ---------- */
+  const ITEMS = [
+    { e: '🔮', c: '#D9C9F7' }, { e: '🧪', c: '#B9F3D0' },
+    { e: '🕯️', c: '#FFE7A8' }, { e: '🍄', c: '#FFC59E' },
+  ];
+  const TRAY_SIZE = 7;
+  const shelfEl = document.getElementById('shelf');
+  const trayEl = document.getElementById('tray');
+  const statusEl = document.getElementById('status');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let tray = [];        // item indices in the tray
+  let state = 'play';   // play | win | lose
+  let busy = false;
+
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  function makeTile(type) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tile'; b.textContent = ITEMS[type].e;
+    b.style.background = ITEMS[type].c; b.dataset.type = type;
+    return b;
+  }
+
+  function renderTray() {
+    trayEl.replaceChildren();
+    for (let i = 0; i < TRAY_SIZE; i++) {
+      const s = document.createElement('div'); s.className = 'slot';
+      if (tray[i] !== undefined) {
+        const tile = makeTile(tray[i]); tile.tabIndex = -1; tile.setAttribute('aria-hidden', 'true');
+        s.appendChild(tile);
+      }
+      trayEl.appendChild(s);
+    }
+    trayEl.classList.toggle('danger', tray.length >= TRAY_SIZE - 1 && state === 'play');
+  }
+
+  function refreshStatus() {
+    statusEl.textContent = state === 'win' ? t('playWin') : state === 'lose' ? t('playLose') : t('playHint');
+  }
+
+  function newGame() {
+    const deck = shuffle([0,0,0,1,1,1,2,2,2,3,3,3]);
+    shelfEl.replaceChildren();
+    for (let r = 0; r < 3; r++) {
+      const row = document.createElement('div'); row.className = 'row';
+      for (let c = 0; c < 4; c++) {
+        const tile = makeTile(deck[r * 4 + c]);
+        tile.setAttribute('aria-label', 'Item ' + ITEMS[tile.dataset.type].e);
+        tile.addEventListener('click', () => pick(tile));
+        row.appendChild(tile);
+      }
+      shelfEl.appendChild(row);
+    }
+    tray = []; state = 'play'; busy = false;
+    renderTray(); refreshStatus();
+  }
+
+  function insertIndex(type) {
+    // Keep same items together, like the real game.
+    let last = -1;
+    tray.forEach((v, i) => { if (v === type) last = i; });
+    return last === -1 ? tray.length : last + 1;
+  }
+
+  function pick(tile) {
+    if (state !== 'play' || busy || tile.classList.contains('gone')) return;
+    if (tray.length >= TRAY_SIZE) return;
+    busy = true;
+    const type = Number(tile.dataset.type);
+    const idx = insertIndex(type);
+    const from = tile.getBoundingClientRect();
+    tile.classList.add('gone');
+    tray.splice(idx, 0, type);
+    renderTray();
+    const target = trayEl.children[idx].firstChild;
+    const to = target.getBoundingClientRect();
+
+    const finish = () => { target.style.visibility = ''; resolve(); };
+    if (reduceMotion) { finish(); return; }
+    target.style.visibility = 'hidden';
+    const fly = makeTile(type);
+    fly.classList.add('flyer'); fly.tabIndex = -1; fly.setAttribute('aria-hidden', 'true');
+    Object.assign(fly.style, { left: from.left + 'px', top: from.top + 'px', width: from.width + 'px', height: from.height + 'px', fontSize: getComputedStyle(tile).fontSize });
+    document.body.appendChild(fly);
+    requestAnimationFrame(() => {
+      const scale = to.width / from.width;
+      fly.style.transformOrigin = 'top left';
+      fly.style.transform = `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${scale})`;
+    });
+    fly.addEventListener('transitionend', () => { fly.remove(); finish(); }, { once: true });
+  }
+
+  function resolve() {
+    const counts = {};
+    tray.forEach((v) => { counts[v] = (counts[v] || 0) + 1; });
+    const matched = Object.keys(counts).find((k) => counts[k] >= 3);
+    if (matched !== undefined) {
+      const type = Number(matched);
+      const slots = [...trayEl.children].filter((s, i) => tray[i] === type).slice(0, 3);
+      slots.forEach((s) => s.firstChild && s.firstChild.classList.add('pop'));
+      setTimeout(() => {
+        let removed = 0;
+        tray = tray.filter((v) => !(v === type && removed++ < 3));
+        const left = shelfEl.querySelectorAll('.tile:not(.gone)').length;
+        if (left === 0 && tray.length === 0) state = 'win';
+        renderTray(); refreshStatus(); busy = false;
+      }, reduceMotion ? 0 : 320);
+      return;
+    }
+    if (tray.length >= TRAY_SIZE) state = 'lose';
+    refreshStatus(); busy = false;
+  }
+
+  document.getElementById('reset').addEventListener('click', newGame);
+  newGame();
+  applyLang(pickLang());
+</script>
+</body>
+</html>
