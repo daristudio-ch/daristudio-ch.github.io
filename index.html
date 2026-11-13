@@ -104,6 +104,8 @@
   .play-status { min-height: 1.6em; margin-top: 12px; color: var(--lilac); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .reset { white-space: nowrap; flex-shrink: 0; font: 800 0.9rem var(--text); color: var(--cream); background: transparent; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
   .reset:hover { border-color: var(--lilac); }
+  .play-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .reset.sound { padding: 6px 9px; font-size: 1rem; line-height: 1; }
   .flyer { position: fixed; z-index: 20; pointer-events: none; transition: transform .32s cubic-bezier(.3,.8,.3,1); }
 
   /* Game */
@@ -173,7 +175,10 @@
         <div class="tray" id="tray" aria-label="Tray"></div>
         <div class="play-status">
           <span id="status" aria-live="polite" data-i18n="playHint">Tap three of a kind to clear them.</span>
-          <button class="reset" type="button" id="reset" data-i18n="playAgain">Play again</button>
+          <span class="play-actions">
+            <button class="reset sound" type="button" id="sound" aria-pressed="true" aria-label="Sound">🔊</button>
+            <button class="reset" type="button" id="reset" data-i18n="playAgain">Play again</button>
+          </span>
         </div>
       </div>
     </section>
@@ -232,6 +237,7 @@
       playWin: 'Shelf cleared. Nicely done!',
       playLose: 'The tray is full. Try again?',
       playAgain: 'Play again',
+      soundOn: 'Sound on', soundOff: 'Sound off',
       soon: 'Coming soon to Google Play',
       screenAlt: 'Goods Sort Puzzle: wooden shelves full of magic items and a tray at the bottom',
       gameText1: 'Tap items on the wooden shelves to move them to your tray. Collect three of a kind to clear them, and empty every shelf to finish the level.',
@@ -255,6 +261,7 @@
       playWin: 'Étagère vidée. Bien joué !',
       playLose: 'Le plateau est plein. On réessaie ?',
       playAgain: 'Rejouer',
+      soundOn: 'Son activé', soundOff: 'Son coupé',
       soon: 'Bientôt sur Google Play',
       screenAlt: 'Goods Sort Puzzle : des étagères en bois remplies d’objets magiques et un plateau en bas',
       gameText1: 'Touche les objets sur les étagères en bois pour les placer sur ton plateau. Réunis trois objets identiques pour les faire disparaître et vide toutes les étagères pour terminer le niveau.',
@@ -278,6 +285,7 @@
       playWin: 'Regal geleert. Gut gemacht!',
       playLose: 'Die Leiste ist voll. Noch einmal?',
       playAgain: 'Nochmal spielen',
+      soundOn: 'Ton an', soundOff: 'Ton aus',
       soon: 'Bald auf Google Play',
       screenAlt: 'Goods Sort Puzzle: Holzregale voller magischer Gegenstände und unten eine Leiste',
       gameText1: 'Tippe auf Gegenstände in den Holzregalen, um sie in deine Leiste zu legen. Sammle drei gleiche, um sie zu entfernen, und leere alle Regale, um das Level zu schaffen.',
@@ -301,6 +309,7 @@
       playWin: 'Рафтът е празен. Браво!',
       playLose: 'Тавата е пълна. Пак ли?',
       playAgain: 'Играй пак',
+      soundOn: 'Звукът е включен', soundOff: 'Звукът е изключен',
       soon: 'Скоро в Google Play',
       screenAlt: 'Goods Sort Puzzle: дървени рафтове с магически предмети и тава отдолу',
       gameText1: 'Докосвай предметите по дървените рафтове, за да ги прехвърлиш в тавата. Събери три еднакви, за да изчезнат, и изпразни всички рафтове, за да завършиш нивото.',
@@ -335,6 +344,7 @@
     document.querySelectorAll('[data-i18n-alt]').forEach((el) => { el.alt = t(el.dataset.i18nAlt); });
     document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
     refreshStatus();
+    if (typeof renderSound === 'function') renderSound();
     try { localStorage.setItem('dari-lang', lang); } catch (e) { /* ignore */ }
   }
   document.querySelectorAll('.langs button').forEach((b) => b.addEventListener('click', () => applyLang(b.dataset.lang)));
@@ -346,6 +356,59 @@
     a.href = 'mailto:' + CONTACT_EMAIL; a.textContent = CONTACT_EMAIL; a.className = 'email';
     emailEl.replaceChildren(a);
   }
+
+  /* ---------- Sound (synthesised with Web Audio, no files) ---------- */
+  let audioCtx = null;
+  let soundOn = true;
+  try { soundOn = localStorage.getItem('dari-sound') !== 'off'; } catch (e) { /* ignore */ }
+
+  function audio() {
+    if (!soundOn) return null;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(freq, at, dur, opts = {}) {
+    const ctx = audio();
+    if (!ctx) return;
+    const t0 = ctx.currentTime + at;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = opts.type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    if (opts.slide) osc.frequency.exponentialRampToValueAtTime(opts.slide, t0 + dur);
+    const peak = opts.gain ?? 0.16;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(peak, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  const sfx = {
+    tap() { tone(480, 0, 0.09, { type: 'triangle', slide: 760, gain: 0.14 }); },
+    match() { [660, 880, 1175].forEach((f, i) => tone(f, i * 0.07, 0.22, { gain: 0.14 })); },
+    win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * 0.1, 0.35, { type: 'triangle', gain: 0.13 })); },
+    lose() { tone(330, 0, 0.32, { type: 'sawtooth', slide: 165, gain: 0.06 }); },
+  };
+
+  const soundBtn = document.getElementById('sound');
+  function renderSound() {
+    soundBtn.textContent = soundOn ? '🔊' : '🔇';
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+    soundBtn.setAttribute('aria-label', t(soundOn ? 'soundOn' : 'soundOff'));
+    soundBtn.title = t(soundOn ? 'soundOn' : 'soundOff');
+  }
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    try { localStorage.setItem('dari-sound', soundOn ? 'on' : 'off'); } catch (e) { /* ignore */ }
+    renderSound();
+    if (soundOn) sfx.tap();
+  });
 
   /* ---------- Mini triple-match ---------- */
   const ITEMS = [
@@ -415,6 +478,7 @@
     if (state !== 'play' || busy || tile.classList.contains('gone')) return;
     if (tray.length >= TRAY_SIZE) return;
     busy = true;
+    sfx.tap();
     const type = Number(tile.dataset.type);
     const idx = insertIndex(type);
     const from = tile.getBoundingClientRect();
@@ -447,16 +511,17 @@
       const type = Number(matched);
       const slots = [...trayEl.children].filter((s, i) => tray[i] === type).slice(0, 3);
       slots.forEach((s) => s.firstChild && s.firstChild.classList.add('pop'));
+      sfx.match();
       setTimeout(() => {
         let removed = 0;
         tray = tray.filter((v) => !(v === type && removed++ < 3));
         const left = shelfEl.querySelectorAll('.tile:not(.gone)').length;
-        if (left === 0 && tray.length === 0) state = 'win';
+        if (left === 0 && tray.length === 0) { state = 'win'; setTimeout(sfx.win, 120); }
         renderTray(); refreshStatus(); busy = false;
       }, reduceMotion ? 0 : 320);
       return;
     }
-    if (tray.length >= TRAY_SIZE) state = 'lose';
+    if (tray.length >= TRAY_SIZE) { state = 'lose'; sfx.lose(); }
     refreshStatus(); busy = false;
   }
 
